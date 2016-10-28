@@ -1,0 +1,24 @@
+{
+  "name": "dhx-optimus",
+  "version": "0.1.0",
+  "description": "Micro framework for DHTMLX based web applications",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:DHTMLX/optimus.git"
+  },
+  "keywords": [
+    "dhtmlx",
+    "framework",
+    "app"
+  ],
+  "author": "Stanislav Wolski",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DHTMLX/optimus/issues"
+  },
+  "homepage": "https://github.com/DHTMLX/optimus#readme"
+}
