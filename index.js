@@ -1,9 +1,16 @@
 class LocalSession{
 	get(key, def){
 		var value = window.localStorage.getItem(key);
-		return value === null ? def : value; 
+		var data;
+		try {
+			data = value ? JSON.parse(value) : def;
+		} catch(e){
+			data = def;
+		}
+		return data;
 	}
 	set(key, value){
+		value = JSON.stringify(value);
 		window.localStorage.setItem(key, value);
 	}
 }
@@ -37,6 +44,7 @@ export class DHXApp{
 	show(view){
 		var t = new view(this, this.root);
 		t.render();
+		t.callEvent("onAppRender",[]);
 
 		return t;
 	}
@@ -49,9 +57,11 @@ export class DHXApp{
 	}
 
 	imagepath(comp){
-		return this.config.images+"/dhx"+comp+"_"+this.config.skin+"/";
+		var images = this.config.images || "//cdn.dhtmlx.com/edge/imgs/";
+		var skin = this.config.skin || "material";
+		return images+"/dhx"+comp+"_"+skin+"/";
 	}
-	destructor(){
+	destroy(){
 		this.services = this.events = this.root = this.config = null;
 	}
 }
@@ -61,12 +71,25 @@ export class DHXView{
 	constructor(app, root){
 		this.app = app;
 		this.root = root;
+
+		this._tempServices = [];
+		this._slots = [];
 	}
-	show(view, cell){
-		var t = new view(this.app, cell);
+	show(view, cell, name){
+		name = name || uid();
+		
+		if (this._slots[name])
+			this._slots[name].destroy();
+		
+		var t = this._slots[name] = new view(this.app, cell);
 		t.render();
 
 		return t;
+	}
+
+	refresh(){
+		this.clean();
+		this.render();
 	}
 
 	attachEvent(name, handler){
@@ -77,12 +100,46 @@ export class DHXView{
 		this.app.callEvent(name, (params || []));
 	}
 
+	addService(name, obj){
+		this.app.addService(name, obj);
+		this._tempServices[name]=obj;
+	}
+
+	getService(){
+		return this.app.getService(name);
+	}
+
 	render(){
 		dhtmlx.message("Render method is not implemented for the view");
 	}
 
-	destructor(){
+	clean(){
 		this.app.detachEvent({ tag: this });
+
+		for (let key in this._tempServices){
+			if (this.getService(key) === this._tempServices[key])
+				this.app.setService(key, null);
+		}
+
+		//destroy UI
+		if (this.ui){
+			if (this.ui.destructor)
+				this.ui.destructor();
+			else if (this.ui.unload)
+				this.ui.unload();
+			else if (this.ui.close){
+				this.ui.close();			
+			}
+		}
+
+		//destroy child views
+		for (let key in this._slots)
+			this._slots[key].destroy();
+		this._slots = [];
+	}	
+
+	destroy(){
+		this.clean();
 		this.model = this.ui = this.app = this.root = null;
 	}
 }
