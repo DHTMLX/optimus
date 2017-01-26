@@ -15,76 +15,59 @@ class LocalSession{
 	}
 }
 
-export class DHXApp{
-	constructor(config){
-		addEventSystem(this);
-
-		//event bus facade
-		this.session = new LocalSession();
-		this.events = {
-			attachEvent: this.attachEvent,
-			callEvent: this.callEvent
-		};
-
-		this.services = {};
-		this.config = config || {};
-
-		//create wrapper for root node
-		let root = toNode(this.config.container || document.body);
-		if (!root.tagName)
-			this.root = root;
-		else
-			this.root = {
-				root,
-				attachLayout:function(config){
-					return new dhtmlXLayoutObject(this.root, config);
-				}
-			};
+export class HTMLCell{
+	constructor(root){
+		this.root = root;
 	}
-	show(view){
-		var t = new view(this, this.root);
-		t.render();
-		t.callEvent("onAppRender",[]);
-
-		return t;
-	}
-
-	addService(name, obj){
-		this.services[name] = obj;
-	}
-	getService(name){
-		return this.services[name];
-	}
-
-	imagepath(comp){
-		var images = this.config.images || "//cdn.dhtmlx.com/edge/imgs/";
-		var skin = this.config.skin || "material";
-		return images+"/dhx"+comp+"_"+skin+"/";
-	}
-	destroy(){
-		this.services = this.events = this.root = this.config = null;
+	attachLayout(config){
+		return new dhtmlXLayoutObject(this.root, config);
 	}
 }
 
-
 export class DHXView{
 	constructor(app, root){
-		this.app = app;
+		this.app = app || this;
 		this.root = root;
 
-		this._tempServices = [];
-		this._slots = [];
+		this._tempServices = {};
+		this._slots = {};
+		this._usedSlots = {};
 	}
-	show(view, cell, name){
-		name = name || uid();
+	_cleanSlot(name){
+		if (this._usedSlots[name]){
+			this._usedSlots[name].destroy();
+			this._usedSlots[name] = null;
+		}
+	}
+	show(view, cell){
+		cell = cell || this.root;
+
+		let name = uid();
+		if (typeof cell === "string"){
+			name = cell;
+			cell = this._slots[cell];
+		}
+		this._cleanSlot(name);
 		
-		if (this._slots[name])
-			this._slots[name].destroy();
 		
-		var t = this._slots[name] = new view(this.app, cell);
+		var sub;
+		if (typeof view === "function"){
+			sub = new view(this.app, cell);
+		} else {
+			sub = view;
+			sub.app = this;
+			sub.root = cell;
+		}
+
+		var t = this._usedSlots[name] = sub;
 		t.render();
 
 		return t;
+	}
+
+	addSlot(name, obj){
+		this._slots[name] = obj;
+		this._cleanSlot(name);
 	}
 
 	refresh(){
@@ -133,16 +116,80 @@ export class DHXView{
 		}
 
 		//destroy child views
-		for (let key in this._slots)
-			this._slots[key].destroy();
-		this._slots = [];
-	}	
+		for (let key in this._usedSlots)
+			this._usedSlots[key].destroy();
+		this._usedSlots = [];
+	}
+
+	imagepath(comp){
+		return this.app.imagepath(comp);
+	}
 
 	destroy(){
 		this.clean();
-		this.model = this.ui = this.app = this.root = null;
+		this._slots = this.model = this.ui = this.app = this.root = null;
 	}
 }
+
+// new App(config)
+// or
+// this.show(App, cell)
+// or
+// this.show( new App(config), cell)
+
+export class DHXApp extends DHXView{
+	constructor(app, root){
+		//create wrapper for root node
+		root = root || document.body;
+		if (!root.attachLayout){
+			root = toNode(root || document.body);
+			root = new HTMLCell(root);
+		}
+
+		super(null, root);
+		if (app instanceof DHXApp)
+			this.top = app;
+
+		addEventSystem(this);
+
+		//event bus facade
+		this.session = new LocalSession();
+		this.facade = {
+			session: 		this.session,
+			attachEvent: 	this.attachEvent.bind(this),
+			callEvent: 		this.callEvent.bind(this),
+			getService: 	this.getService.bind(this),
+			setService: 	this.addService.bind(this)
+		};
+
+		this.services = {};
+		this.config = ( app instanceof DHXApp ? app.config : app ) || {};
+	}
+	show(view, cell, name){
+		let t = super.show(view, cell, name);
+		this.callEvent("onAppRender",[]);
+		return t;
+	}
+
+	addService(name, obj){
+		this.services[name] = obj;
+	}
+	getService(name){
+		return this.services[name];
+	}
+
+	imagepath(comp){
+		var images = this.config.images || "//cdn.dhtmlx.com/edge/imgs/";
+		var skin = this.config.skin || "material";
+		return images+"/dhx"+comp+"_"+skin+"/";
+	}
+
+	destroy(){
+		super.destroy();
+		this.services = this.events = this.config = null;
+	}
+}
+
 
 // Common helpers
 
@@ -189,7 +236,6 @@ export function addEventSystem(obj){
 	};
 
 	obj.callEvent = function(name, args){
-		window.console.log(name, args);
 		name = name.toLowerCase();
 		let stack = evs[name];
 		let result = true;

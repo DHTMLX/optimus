@@ -1,6 +1,6 @@
 {
   "name": "dhx-optimus",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Micro framework for DHTMLX based web applications",
   "main": "index.js",
   "scripts": {
