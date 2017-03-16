@@ -251,7 +251,6 @@ export function addEventSystem(obj){
 	};
 }
 
-
 export function copy(source){
 	var target = Array.isArray(source)?[]:{};
 
@@ -268,3 +267,24 @@ export function copy(source){
 	}
 	return target;	
 };
+
+export class DHXLocale{
+	constructor(Polyglot, langs, lang){
+		this._polyglot = Polyglot;
+		this._langs = langs;
+		this._locale = lang || "en";
+		this.setLang(this._locale);
+	}
+	setLang(locale, phrases){
+		phrases = phrases || this._langs[locale];
+		var poly = new this._polyglot({ locale, phrases });
+		this._locale = locale;
+		this._t = poly.t.bind(poly);
+	}
+	getLang(){
+		return  this._locale
+	}
+	helper(){
+		return this._t;
+	}
+}
