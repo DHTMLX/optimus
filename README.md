@@ -9,7 +9,9 @@ http://dhtmlx.com
 
 ### How to use
 
-... in progress...
+- [Complete documentation](https://docs.dhtmlx.com/optimus__index.html) on the concept and usage of the Optimus framework
+- [Starter package](https://github.com/dhtmlx/optimus-start) to begin creating an application
+- [Demo applications](https://github.com/dhtmlx/optimus-demos)
 
 ### License
 
