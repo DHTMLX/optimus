@@ -919,6 +919,7 @@ type dhtmlXLayoutObjectEventName ='onCollapse'|'onContentLoaded'|'onDblClick'|'o
 
 declare class dhtmlXLayoutObject {
 	constructor(config:any);
+	constructor(node:HTMLElement|string, pattern:string);
 	attachEvent(name:dhtmlXLayoutObjectEventName, handler:ICallable):number;
 	attachFooter(id:any, height:number):void;
 	attachHeader(id:any, height:number):void;

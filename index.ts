@@ -46,8 +46,11 @@ export class HTMLCell{
 		this.root = root;
 	}
 	attachLayout(config: any): dhtmlXLayoutObject{
-		config.parent = this.root;
-		return new dhtmlXLayoutObject(config);
+		if (typeof config === "object"){
+			config.parent = this.root;
+			return new dhtmlXLayoutObject(config);
+		} else 
+			return new dhtmlXLayoutObject(this.root, config);
 	}
 }
 

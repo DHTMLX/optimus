@@ -20,8 +20,12 @@ export class HTMLCell {
         this.root = root;
     }
     attachLayout(config) {
-        config.parent = this.root;
-        return new dhtmlXLayoutObject(config);
+        if (typeof config === "object") {
+            config.parent = this.root;
+            return new dhtmlXLayoutObject(config);
+        }
+        else
+            return new dhtmlXLayoutObject(this.root, config);
     }
 }
 export class DHXView {
