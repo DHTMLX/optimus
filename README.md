@@ -13,6 +13,20 @@ http://dhtmlx.com
 - [Starter package](https://github.com/dhtmlx/optimus-start) to begin creating an application
 - [Demo applications](https://github.com/dhtmlx/optimus-demos)
 
+### Build commands
+
+Build es6 version from typescript
+
+```
+yarn es6
+```
+
+Test typescript sources
+
+```
+yarn test
+```
+
 ### License
 
 The MIT License (MIT)    
