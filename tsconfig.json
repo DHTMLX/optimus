@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "outDir": ".",
+    "sourceMap": false,
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "es6",
+    "allowJs": true
+  },
+  "files":[
+  	"./typings/dhtmlx.d.ts",
+    "./index.ts"
+  ]
+}
