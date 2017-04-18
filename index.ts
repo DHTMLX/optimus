@@ -49,8 +49,9 @@ export class HTMLCell{
 		if (typeof config === "object"){
 			config.parent = this.root;
 			return new dhtmlXLayoutObject(config);
-		} else 
+		} else {
 			return new dhtmlXLayoutObject(this.root, config);
+		}
 	}
 }
 
