@@ -1,0 +1,55 @@
+{
+  "name": "optimus",
+  "version": "2.0.0",
+  "description": "Optimus micro-framework",
+  "main": "dist/es5/optimus.js",
+  "module": "dist/es6/optimus.js",
+  "types": "dist/types/index.d.ts",
+  "scripts": {
+    "test": "node tests/runner/start.js",
+    "lint": "tslint --project tsconfig.json sources/**/*.ts",
+    "dist": "rm -rf ./dist && rollup -c rollup.es6.js && rollup -c rollup.es5.js",
+    "watch": "rollup -c rollup.es6.js -w",
+    "watch-es5": "rollup -c rollup.es5.js -w",
+    "watch-test": "watch --wait 2 'yarn test' ./dist/libs ./tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DHTMLX/optimus.git"
+  },
+  "keywords": [
+    "dhtmlx",
+    "framework",
+    "ui"
+  ],
+  "files": [
+    "/dist",
+    "README.md"
+  ],
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "husky": "^3.0.9",
+    "mocha": "^6.0.0",
+    "prettier": "1.18.2",
+    "pretty-quick": "^2.0.0",
+    "rollup": "^1.2.2",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-node-resolve": "^4.0.0",
+    "rollup-plugin-typescript2": "^0.19.2",
+    "tslint": "^5.12.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.3.3",
+    "watch": "^1.0.2"
+  },
+  "author": "Maksim Kozhukh",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/webix-hub/webix-jet/issues"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
+  "homepage": "https://github.com/webix-hub/webix-jet#readme"
+}

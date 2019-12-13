@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+    	"module": "esnext",
+        "target": "es6",
+        "lib": ["es2018", "dom"],
+        "sourceMap": true,
+        "declaration": true,
+        "declarationDir":"dist/types"
+    },
+    "include":[
+        "sources/**/*.ts"
+    ]
+}
