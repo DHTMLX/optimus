@@ -1,6 +1,6 @@
 {
-  "name": "optimus",
-  "version": "2.0.0",
+  "name": "dhx-optimus",
+  "version": "2.0.0-alfa.1",
   "description": "Optimus micro-framework",
   "main": "dist/es5/optimus.js",
   "module": "dist/es6/optimus.js",
@@ -43,13 +43,10 @@
   },
   "author": "Maksim Kozhukh",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/webix-hub/webix-jet/issues"
-  },
   "husky": {
     "hooks": {
       "pre-commit": "pretty-quick --staged"
     }
   },
-  "homepage": "https://github.com/webix-hub/webix-jet#readme"
+  "homepage": "https://dhtmlx.com"
 }
