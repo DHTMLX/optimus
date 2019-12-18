@@ -12,6 +12,8 @@ export interface IParams {
 
 export interface ICell extends IEventSource {
 	attach(obj: any): any;
+	attachHTML(obj: string):void;
+	mount(obj: HTMLElement):void;
 	cell(name: string): ICell;
 }
 
@@ -25,7 +27,7 @@ export interface IRouteConfig {
 }
 
 export interface IView extends IViewEventSource {
-	init(): ICell;
+	init(): ICell|string;
 	ready(): void;
 	show(target:string|ICell, view:IViewFactory, state?:IParams)
 	destroy();

@@ -16,10 +16,11 @@ export class View implements IView, IViewEventSource {
 	protected app: IApp;
 	protected cell: ICell;
 	protected params: IParams;
-	protected root: ICell;
+	protected dhxRoot: ICell;
+	protected htmlRoot: HTMLElement;
 
 	private _routes: IRouteConfig[];
-	private _views: Map<ICell, IView>;
+	private _views: Map<ICell|HTMLElement, IView>;
 	private _events: IEventHandler[];
 
 	constructor(app: IApp, params: IParams) {
@@ -46,41 +47,70 @@ export class View implements IView, IViewEventSource {
 	}
 
 	fire(name, data){
-		return this.app.fire(name, data);
+		return this.app.events.fire(name, data);
 	}
 
-	_toCell(name: string | ITargetLocator): ICell {
-		if (!name) {
-			name = "content";
-		}
+	show(cell:string|ICell, view:IViewFactory|string, params:IParams) {
+		let htmlTarget:HTMLElement = null;
+		let dhxTarget:ICell = null;
 
-		if (typeof name === "string") {
-			return this.root.cell(name);
+		if (cell) {
+			if (typeof cell === "string"){
+				htmlTarget = (this.htmlRoot||document).querySelector(cell);
+			} else {
+				dhxTarget = typeof cell === "string" ? null: cell;
+			}
 		} else {
-			return name(this.root);
+			if (this.htmlRoot){
+				htmlTarget = this.htmlRoot;
+			}
+			if (this.dhxRoot){
+				dhxTarget = this.dhxRoot;
+			}
 		}
-	}
 
-	show(cell:string|ICell, view:IViewFactory, params:IParams) {
-		const target = (typeof cell === "string") ? this._toCell(cell) : cell;
+		const target = htmlTarget || dhxTarget;
 		params = params || {};
 		const old = this._views.get(target);
 		if (old) {
 			old.destroy();
 		}
 
-		const now = new view(this.app, params);
-		this._views.set(target, now);
-
-		const subroot = now.init();
-
-		(now as any).root = subroot;
+		let now:IView = null;
+		let subroot : string|ICell = null;
+		if (typeof view !== "string"){
+			now = new view(this.app, params);
+			this._views.set(target, now);
+			subroot = now.init();
+		} else {
+			subroot = view;
+		}
 		
-		if (target){
-			target.attach(subroot);
+		if (dhxTarget){
+			(now as any).dhxRoot = subroot;
+			if (typeof subroot === "string") {
+				dhxTarget.attachHTML(subroot);
+			} else {
+				dhxTarget.attach(subroot);
+			}
+		} else {
+			if (now){
+				(now as any).htmlRoot = htmlTarget;
+			}
+			if (typeof subroot === "string"){
+				htmlTarget.innerHTML = subroot;
+			} else {
+				htmlTarget.innerHTML = "";
+				// windows do not have one
+				if (subroot.mount){
+					subroot.mount(htmlTarget);
+				}
+			}
 		}
 
-		now.ready();
+		if (now){
+			now.ready();
+		}
 	}
 
 	init():ICell {

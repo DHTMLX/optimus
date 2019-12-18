@@ -1,4 +1,4 @@
-import { IApp, IDHXLibrary, IEventSource, IParams } from "./types";
+import { IApp, ICell, IDHXLibrary, IEventSource, IParams } from "./types";
 import { View } from "./View";
 
 declare var dhx: IDHXLibrary;
@@ -13,17 +13,17 @@ export class App extends View implements IApp {
 		this.app = this;
 		this.events = new dhx.EventSystem();
 	}
-	render(target: HTMLElement) {
-		if (!target) {
-			target = document.body;
+	render(target: string|ICell) {
+		if (!target){
+			target = "body";
+		}
+	
+		if (typeof target === "string"){
+			this.htmlRoot = document.querySelector(target);
+		} else {
+			this.dhxRoot = target
 		}
 
-		this.root = new dhx.Layout(target, {
-			rows: [{
-				id: "content",
-			}]
-		});
-		
 		this.init();
 	}
 	routes(){
