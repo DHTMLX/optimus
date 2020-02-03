@@ -1,2 +1,2 @@
 export { App } from "./App";
-export { View } from "./View";
+export { View, TopView } from "./View";
