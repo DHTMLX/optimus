@@ -84,7 +84,7 @@ export class View implements IView, IViewEventSource {
     const target = htmlTarget || dhxTarget;
     params = params || {};
     const old = this._views.get(target);
-    if (old) {
+    if (old && cell !== TopView) {
       old.destroy();
     }
 
