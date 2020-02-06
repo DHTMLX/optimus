@@ -58,7 +58,7 @@ export class View implements IView, IViewEventSource {
     return this.app.events.fire(name, data);
   }
 
-  show(cell: string | ICell, view: IViewFactory | string, params: IParams) {
+  show(cell: string | ICell, view: IViewFactory | string, params: IParams) : IView {
     let htmlTarget: HTMLElement = null;
     let dhxTarget: ICell = null;
 
@@ -123,6 +123,8 @@ export class View implements IView, IViewEventSource {
     if (now) {
       now.ready();
     }
+    
+    return now;
   }
 
   init(): ICell {
