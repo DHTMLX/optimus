@@ -4,31 +4,18 @@ import {
   IDHXLibrary,
   IEventSource,
   IParams,
-  StatePathEvaluator
+  IStore
 } from "./types";
 import { View } from "./View";
 
 declare var dhx: IDHXLibrary;
 
-export class App<
-  StateT extends {
-    observe(
-      evaluator: StatePathEvaluator<StateT>,
-      handler: (value: unknown) => void
-    );
-    unobserve(
-      evaluator: StatePathEvaluator<StateT>,
-      handler: (value: unknown) => void
-    );
-  }
-> extends View<StateT> implements IApp<StateT> {
+export class App<StateT> extends View<StateT> implements IApp<StateT> {
   public events: IEventSource;
-  public router: any;
-  private _state: StateT;
+  public store: IStore<StateT>;
 
   constructor(app: IApp<StateT>, state: IParams<StateT>) {
     super(app, state);
-
     this.app = this;
     this.events = new dhx.EventSystem();
   }

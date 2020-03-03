@@ -8,7 +8,7 @@ type IDHXLayout = new (target: HTMLElement, cfg: any) => ICell;
 
 export interface IParams<StateT> {
   [id: string]: any;
-  state?: StateT;
+  store?: IStore<StateT>;
 }
 
 export interface ICell extends IEventSource {
@@ -29,6 +29,17 @@ export interface IView<StateT> extends IViewEventSource {
     state?: IParams<StateT>
   );
   destroy();
+}
+
+export interface IStore<StateT> {
+  observe(
+    evaluator: StatePathEvaluator<StateT>,
+    handler: (value: unknown) => void
+  ): void;
+  unobserve(
+    evaluator: StatePathEvaluator<StateT>,
+    handler: (value: unknown) => void
+  ): void;
 }
 
 export type IViewFactory<StateT> = new (
@@ -57,6 +68,7 @@ export interface IViewEventSource {
 }
 
 export interface IApp<StateT> extends IView<StateT> {
+  store: IStore<StateT>;
   events: IEventSource;
 }
 

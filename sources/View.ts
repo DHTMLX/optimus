@@ -14,18 +14,7 @@ import {
 // tslint:disable-next-line:variable-name
 export const TopView: string = "TopView";
 
-export class View<
-  StateT extends {
-    observe(
-      evaluator: StatePathEvaluator<StateT>,
-      handler: (value: unknown) => void
-    );
-    unobserve(
-      evaluator: StatePathEvaluator<StateT>,
-      handler: (value: unknown) => void
-    );
-  }
-> implements IView<StateT>, IViewEventSource {
+export class View<StateT> implements IView<StateT>, IViewEventSource {
   protected app: IApp<StateT>;
   protected cell: ICell;
   protected params: IParams<StateT>;
@@ -163,9 +152,9 @@ export class View<
     }
     this._stateHandlers.get(evaluator).push(handler);
     if (!this.params.state || !this.params.state.observe) {
-      throw new Error(`State for view ${this.constructor.name} is not set`);
+      throw new Error(`Store for view ${this.constructor.name} is not set`);
     }
-    this.params.state.observe(evaluator, handler);
+    this.params.store.observe(evaluator, handler);
   }
 
   destroy() {
@@ -176,7 +165,7 @@ export class View<
     this._views.forEach(view => view.destroy());
 
     [...this._stateHandlers.entries()].forEach(([prop, handlers]) =>
-      handlers.forEach(h => this.params.state.unobserve(prop, h))
+      handlers.forEach(h => this.params.store.unobserve(prop, h))
     );
   }
 }
