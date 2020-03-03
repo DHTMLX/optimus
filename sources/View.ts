@@ -7,23 +7,39 @@ import {
   IParams,
   IView,
   IViewEventSource,
-  IViewFactory
+  IViewFactory,
+  StatePathEvaluator
 } from "./types";
 
 // tslint:disable-next-line:variable-name
 export const TopView: string = "TopView";
 
-export class View implements IView, IViewEventSource {
-  protected app: IApp;
+export class View<
+  StateT extends {
+    observe(
+      evaluator: StatePathEvaluator<StateT>,
+      handler: (value: unknown) => void
+    );
+    unobserve(
+      evaluator: StatePathEvaluator<StateT>,
+      handler: (value: unknown) => void
+    );
+  }
+> implements IView<StateT>, IViewEventSource {
+  protected app: IApp<StateT>;
   protected cell: ICell;
-  protected params: IParams;
+  protected params: IParams<StateT>;
   protected dhxRoot: ICell;
   protected htmlRoot: HTMLElement;
 
-  private _views: Map<ICell | HTMLElement, IView>;
+  private _stateHandlers: Map<
+    StatePathEvaluator<StateT>,
+    ((value: unknown) => void)[]
+  >;
+  private _views: Map<ICell | HTMLElement, IView<StateT>>;
   private _events: IEventHandler[];
 
-  constructor(app: IApp, params: IParams) {
+  constructor(app: IApp<StateT>, params: IParams<StateT>) {
     this.app = app;
     this.params = params || {};
 
@@ -58,9 +74,9 @@ export class View implements IView, IViewEventSource {
 
   show(
     cell: string | ICell,
-    view: IViewFactory | string,
-    params: IParams
-  ): IView {
+    view: IViewFactory<StateT> | string,
+    params: IParams<StateT>
+  ): IView<StateT> {
     let htmlTarget: HTMLElement = null;
     let dhxTarget: ICell = null;
 
@@ -91,7 +107,7 @@ export class View implements IView, IViewEventSource {
       this._views.delete(target);
     }
 
-    let now: IView = null;
+    let now: IView<StateT> = null;
     let subroot: string | ICell = null;
     if (typeof view !== "string") {
       now = new view(this.app, params);
@@ -138,10 +154,29 @@ export class View implements IView, IViewEventSource {
     /* do nothing */
   }
 
+  observe(
+    evaluator: StatePathEvaluator<StateT>,
+    handler: (value: unknown) => void
+  ) {
+    if (!this._stateHandlers.has(evaluator)) {
+      this._stateHandlers.set(evaluator, []);
+    }
+    this._stateHandlers.get(evaluator).push(handler);
+    if (!this.params.state || !this.params.state.observe) {
+      throw new Error(`State for view ${this.constructor.name} is not set`);
+    }
+    this.params.state.observe(evaluator, handler);
+  }
+
   destroy() {
     this._events.forEach(a => {
       a.obj.detach(a.id);
     });
+
     this._views.forEach(view => view.destroy());
+
+    [...this._stateHandlers.entries()].forEach(([prop, handlers]) =>
+      handlers.forEach(h => this.params.state.unobserve(prop, h))
+    );
   }
 }

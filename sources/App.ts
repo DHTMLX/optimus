@@ -1,13 +1,32 @@
-import { IApp, ICell, IDHXLibrary, IEventSource, IParams } from "./types";
+import {
+  IApp,
+  ICell,
+  IDHXLibrary,
+  IEventSource,
+  IParams,
+  StatePathEvaluator
+} from "./types";
 import { View } from "./View";
 
 declare var dhx: IDHXLibrary;
 
-export class App extends View implements IApp {
+export class App<
+  StateT extends {
+    observe(
+      evaluator: StatePathEvaluator<StateT>,
+      handler: (value: unknown) => void
+    );
+    unobserve(
+      evaluator: StatePathEvaluator<StateT>,
+      handler: (value: unknown) => void
+    );
+  }
+> extends View<StateT> implements IApp<StateT> {
   public events: IEventSource;
   public router: any;
+  private _state: StateT;
 
-  constructor(app: IApp, state: IParams) {
+  constructor(app: IApp<StateT>, state: IParams<StateT>) {
     super(app, state);
 
     this.app = this;
@@ -25,44 +44,5 @@ export class App extends View implements IApp {
     }
 
     this.init();
-  }
-  routes() {
-    return [];
-  }
-  setRouter(router) {
-    this.router = router;
-
-    const routes = this.routes();
-    routes.forEach(r => {
-      let cb;
-      if (r.redirect) {
-        cb = () => router.navigate(r.redirect);
-      } else {
-        cb = url => {
-          const params = {};
-
-          if (r.params) {
-            for (const k in r.params) {
-              params[k] = r.params[k];
-            }
-          }
-          if (url && typeof url === "object") {
-            for (const k in url) {
-              params[k] = url[k];
-            }
-          }
-
-          this.show("", r.view, params);
-        };
-      }
-
-      if (r.path === ":not-found:") {
-        router.notFound(cb);
-      } else {
-        router.on(r.path, cb);
-      }
-    });
-
-    router.resolve();
   }
 }
