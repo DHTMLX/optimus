@@ -90,6 +90,9 @@ export class View<StateT> implements IView<StateT>, IViewEventSource {
 
     const target = htmlTarget || dhxTarget;
     params = params || {};
+    if (!params.store && this.params.store) {
+      params.store = this.params.store;
+    }
     const old = this._views.get(target);
     if (old && cell !== TopView) {
       old.destroy();
