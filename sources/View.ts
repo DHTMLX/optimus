@@ -5,7 +5,6 @@ import {
   IEventSource,
   IEventSourceHolder,
   IParams,
-  IRouteConfig,
   IView,
   IViewEventSource,
   IViewFactory
@@ -21,7 +20,6 @@ export class View implements IView, IViewEventSource {
   protected dhxRoot: ICell;
   protected htmlRoot: HTMLElement;
 
-  private _routes: IRouteConfig[];
   private _views: Map<ICell | HTMLElement, IView>;
   private _events: IEventHandler[];
 
@@ -58,7 +56,11 @@ export class View implements IView, IViewEventSource {
     return this.app.events.fire(name, data);
   }
 
-  show(cell: string | ICell, view: IViewFactory | string, params: IParams) : IView {
+  show(
+    cell: string | ICell,
+    view: IViewFactory | string,
+    params: IParams
+  ): IView {
     let htmlTarget: HTMLElement = null;
     let dhxTarget: ICell = null;
 
@@ -86,6 +88,7 @@ export class View implements IView, IViewEventSource {
     const old = this._views.get(target);
     if (old && cell !== TopView) {
       old.destroy();
+      this._views.delete(target);
     }
 
     let now: IView = null;
@@ -123,7 +126,7 @@ export class View implements IView, IViewEventSource {
     if (now) {
       now.ready();
     }
-    
+
     return now;
   }
 
@@ -139,5 +142,6 @@ export class View implements IView, IViewEventSource {
     this._events.forEach(a => {
       a.obj.detach(a.id);
     });
+    this._views.forEach(view => view.destroy());
   }
 }
