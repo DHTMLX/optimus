@@ -33,6 +33,7 @@ export class View<StateT> implements IView<StateT>, IViewEventSource {
     this.params = params || {};
 
     this._views = new Map();
+    this._stateHandlers = new Map();
     this._events = [];
   }
 
@@ -154,7 +155,7 @@ export class View<StateT> implements IView<StateT>, IViewEventSource {
       this._stateHandlers.set(evaluator, []);
     }
     this._stateHandlers.get(evaluator).push(handler);
-    if (!this.params.state || !this.params.state.observe) {
+    if (!this.params.store || !this.params.store.observe) {
       throw new Error(`Store for view ${this.constructor.name} is not set`);
     }
     this.params.store.observe(evaluator, handler);
