@@ -5,31 +5,35 @@ import {
   IEventSource,
   IEventSourceHolder,
   IParams,
-  IRouteConfig,
   IView,
   IViewEventSource,
-  IViewFactory
+  IViewFactory,
+  StatePathEvaluator
 } from "./types";
 
 // tslint:disable-next-line:variable-name
 export const TopView: string = "TopView";
 
-export class View implements IView, IViewEventSource {
-  protected app: IApp;
+export class View<StateT> implements IView<StateT>, IViewEventSource {
+  protected app: IApp<StateT>;
   protected cell: ICell;
-  protected params: IParams;
+  protected params: IParams<StateT>;
   protected dhxRoot: ICell;
   protected htmlRoot: HTMLElement;
 
-  private _routes: IRouteConfig[];
-  private _views: Map<ICell | HTMLElement, IView>;
+  private _stateHandlers: Map<
+    StatePathEvaluator<StateT>,
+    ((value: unknown) => void)[]
+  >;
+  private _views: Map<ICell | HTMLElement, IView<StateT>>;
   private _events: IEventHandler[];
 
-  constructor(app: IApp, params: IParams) {
+  constructor(app: IApp<StateT>, params: IParams<StateT>) {
     this.app = app;
     this.params = params || {};
 
     this._views = new Map();
+    this._stateHandlers = new Map();
     this._events = [];
   }
 
@@ -58,7 +62,11 @@ export class View implements IView, IViewEventSource {
     return this.app.events.fire(name, data);
   }
 
-  show(cell: string | ICell, view: IViewFactory | string, params: IParams) : IView {
+  show(
+    cell: string | ICell,
+    view: IViewFactory<StateT> | string,
+    params: IParams<StateT>
+  ): IView<StateT> {
     let htmlTarget: HTMLElement = null;
     let dhxTarget: ICell = null;
 
@@ -83,12 +91,16 @@ export class View implements IView, IViewEventSource {
 
     const target = htmlTarget || dhxTarget;
     params = params || {};
+    if (!params.store && this.params.store) {
+      params.store = this.params.store;
+    }
     const old = this._views.get(target);
     if (old && cell !== TopView) {
       old.destroy();
+      this._views.delete(target);
     }
 
-    let now: IView = null;
+    let now: IView<StateT> = null;
     let subroot: string | ICell = null;
     if (typeof view !== "string") {
       now = new view(this.app, params);
@@ -123,7 +135,7 @@ export class View implements IView, IViewEventSource {
     if (now) {
       now.ready();
     }
-    
+
     return now;
   }
 
@@ -135,9 +147,29 @@ export class View implements IView, IViewEventSource {
     /* do nothing */
   }
 
+  observe(
+    evaluator: StatePathEvaluator<StateT>,
+    handler: (value: unknown) => void
+  ) {
+    if (!this._stateHandlers.has(evaluator)) {
+      this._stateHandlers.set(evaluator, []);
+    }
+    this._stateHandlers.get(evaluator).push(handler);
+    if (!this.params.store || !this.params.store.observe) {
+      throw new Error(`Store for view ${this.constructor.name} is not set`);
+    }
+    this.params.store.observe(evaluator, handler);
+  }
+
   destroy() {
     this._events.forEach(a => {
       a.obj.detach(a.id);
     });
+
+    this._views.forEach(view => view.destroy());
+
+    [...this._stateHandlers.entries()].forEach(([prop, handlers]) =>
+      handlers.forEach(h => this.params.store.unobserve(prop, h))
+    );
   }
 }

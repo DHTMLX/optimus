@@ -1,61 +1,75 @@
 export interface IDHXLibrary {
-	Layout: IDHXLayout;
-	EventSystem: IEventSystem;
+  Layout: IDHXLayout;
+  EventSystem: IEventSystem;
 }
 
 type IEventSystem = new () => IEventSource;
 type IDHXLayout = new (target: HTMLElement, cfg: any) => ICell;
 
-export interface IParams {
-	[id: string]: any;
+export interface IParams<StateT> {
+  [id: string]: any;
+  store?: IStore<StateT>;
 }
 
 export interface ICell extends IEventSource {
-	attach(obj: any): any;
-	attachHTML(obj: string):void;
-	mount(obj: HTMLElement):void;
-	cell(name: string): ICell;
+  attach(obj: any): any;
+  attachHTML(obj: string): void;
+  mount(obj: HTMLElement): void;
+  cell(name: string): ICell;
 }
 
 export type ITargetLocator = (root: ICell) => ICell;
 
-export interface IRouteConfig {
-	path: string;
-	view: IViewFactory;
-	redirect: string;
-	params?: IParams;
+export interface IView<StateT> extends IViewEventSource {
+  init(): ICell | string;
+  ready(): void;
+  show(
+    target: string | ICell,
+    view: IViewFactory<StateT>,
+    state?: IParams<StateT>
+  );
+  destroy();
 }
 
-export interface IView extends IViewEventSource {
-	init(): ICell|string;
-	ready(): void;
-	show(target:string|ICell, view:IViewFactory, state?:IParams)
-	destroy();
+export interface IStore<StateT> {
+  observe(
+    evaluator: StatePathEvaluator<StateT>,
+    handler: (value: unknown) => void
+  ): void;
+  unobserve(
+    evaluator: StatePathEvaluator<StateT>,
+    handler: (value: unknown) => void
+  ): void;
 }
 
-export type IViewFactory = new (app: IApp, state: IParams) => IView;
+export type IViewFactory<StateT> = new (
+  app: IApp<StateT>,
+  state: IParams<StateT>
+) => IView<StateT>;
 
 export interface IEventHandler {
-	id: string;
-	obj: IEventSource;
+  id: string;
+  obj: IEventSource;
 }
 
 export interface IEventSource {
-	on(name: string, handler: CallableFunction): string;
-	detach(id: string): void;
-	fire(name: string, args: any[]);
+  on(name: string, handler: CallableFunction): string;
+  detach(id: string): void;
+  fire(name: string, args: any[]);
 }
 
 export interface IEventSourceHolder {
-	events: IEventSource;
+  events: IEventSource;
 }
 
 export interface IViewEventSource {
-	on(obj: IEventSource, name: string, handler: CallableFunction): any;
-	fire(name: string, args: any[]);
+  on(obj: IEventSource, name: string, handler: CallableFunction): any;
+  fire(name: string, args: any[]);
 }
 
-export interface IApp extends IView {
-	events: IEventSource;
-	routes(): IRouteConfig[];
+export interface IApp<StateT> extends IView<StateT> {
+  store: IStore<StateT>;
+  events: IEventSource;
 }
+
+export type StatePathEvaluator<T> = (state: T) => unknown;
