@@ -27,7 +27,7 @@ export class View<StateT> extends Component<StateT>
   show(
     cell: string | ICell,
     view: IViewFactory<StateT> | string,
-    params: IParams<StateT>
+    params?: IParams<StateT>
   ): IView<StateT> {
     let htmlTarget: HTMLElement = null;
     let dhxTarget: ICell = null;

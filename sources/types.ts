@@ -33,7 +33,7 @@ export interface IView<StateT> extends IComponentEventSource {
 
 export interface IComponent<StateT> extends IComponentEventSource {
   init();
-  use(component: IComponentFactory<StateT>, params: IParams<StateT>);
+  use(component: IComponentFactory<StateT>, params?: IParams<StateT>);
   observe(
     evaluator: StatePathEvaluator<StateT>,
     handler: (value: unknown) => void
