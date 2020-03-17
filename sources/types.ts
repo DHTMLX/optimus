@@ -20,13 +20,23 @@ export interface ICell extends IEventSource {
 
 export type ITargetLocator = (root: ICell) => ICell;
 
-export interface IView<StateT> extends IViewEventSource {
+export interface IView<StateT> extends IComponentEventSource {
   init(): ICell | string;
   ready(): void;
   show(
     target: string | ICell,
     view: IViewFactory<StateT>,
-    state?: IParams<StateT>
+    params?: IParams<StateT>
+  );
+  destroy();
+}
+
+export interface IComponent<StateT> extends IComponentEventSource {
+  init();
+  use(component: IComponentFactory<StateT>, params: IParams<StateT>);
+  observe(
+    evaluator: StatePathEvaluator<StateT>,
+    handler: (value: unknown) => void
   );
   destroy();
 }
@@ -44,8 +54,13 @@ export interface IStore<StateT> {
 
 export type IViewFactory<StateT> = new (
   app: IApp<StateT>,
-  state: IParams<StateT>
+  params?: IParams<StateT>
 ) => IView<StateT>;
+
+export type IComponentFactory<StateT> = new (
+  app: IApp<StateT>,
+  params?: IParams<StateT>
+) => IComponent<StateT>;
 
 export interface IEventHandler {
   id: string;
@@ -62,7 +77,7 @@ export interface IEventSourceHolder {
   events: IEventSource;
 }
 
-export interface IViewEventSource {
+export interface IComponentEventSource {
   on(obj: IEventSource, name: string, handler: CallableFunction): any;
   fire(name: string, args: any[]);
 }
