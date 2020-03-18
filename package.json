@@ -4,7 +4,7 @@
   "description": "Optimus micro-framework",
   "main": "dist/es5/optimus.js",
   "module": "dist/es6/optimus.js",
-  "types": "dist/types/index.d.ts",
+  "typings": "dist/types/lib",
   "scripts": {
     "test": "node tests/runner/start.js",
     "lint": "tslint --project tsconfig.json sources/**/*.ts",

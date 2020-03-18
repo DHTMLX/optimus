@@ -67,7 +67,10 @@ export class View<StateT> extends Component<StateT>
     if (typeof view !== "string") {
       now = new view(this.app, params);
       this._views.set(target, now);
-      subroot = now.init();
+      const newCell = now.init();
+      if (newCell) {
+        subroot = newCell;
+      }
     } else {
       subroot = view;
     }
@@ -101,9 +104,7 @@ export class View<StateT> extends Component<StateT>
     return now;
   }
 
-  init(): ICell {
-    return null;
-  }
+  init(): ICell | string | void {}
 
   ready(): void {
     /* do nothing */
