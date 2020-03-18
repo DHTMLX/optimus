@@ -1,71 +1,33 @@
+import { Component } from "./Component";
 import {
   IApp,
   ICell,
-  IEventHandler,
-  IEventSource,
-  IEventSourceHolder,
+  IComponentEventSource,
   IParams,
   IView,
-  IViewEventSource,
-  IViewFactory,
-  StatePathEvaluator
+  IViewFactory
 } from "./types";
 
 // tslint:disable-next-line:variable-name
 export const TopView: string = "TopView";
 
-export class View<StateT> implements IView<StateT>, IViewEventSource {
-  protected app: IApp<StateT>;
+export class View<StateT> extends Component<StateT>
+  implements IView<StateT>, IComponentEventSource {
   protected cell: ICell;
-  protected params: IParams<StateT>;
+
   protected dhxRoot: ICell;
   protected htmlRoot: HTMLElement;
-
-  private _stateHandlers: Map<
-    StatePathEvaluator<StateT>,
-    ((value: unknown) => void)[]
-  >;
   private _views: Map<ICell | HTMLElement, IView<StateT>>;
-  private _events: IEventHandler[];
 
-  constructor(app: IApp<StateT>, params: IParams<StateT>) {
-    this.app = app;
-    this.params = params || {};
-
+  constructor(app: IApp<StateT>, params?: IParams<StateT>) {
+    super(app, params);
     this._views = new Map();
-    this._stateHandlers = new Map();
-    this._events = [];
-  }
-
-  on(
-    obj: IEventSource | IEventSourceHolder,
-    name: string,
-    handler: CallableFunction
-  ): any {
-    if (arguments.length === 2) {
-      handler = (name as any) as CallableFunction;
-      name = (obj as any) as string;
-      obj = this.app;
-    }
-
-    const holder = obj as IEventSourceHolder;
-    const events: IEventSource = holder.events
-      ? holder.events
-      : (obj as IEventSource);
-
-    const state = { id: events.on(name, handler), obj: events };
-    this._events.push(state);
-    return state;
-  }
-
-  fire(name, data) {
-    return this.app.events.fire(name, data);
   }
 
   show(
     cell: string | ICell,
     view: IViewFactory<StateT> | string,
-    params: IParams<StateT>
+    params?: IParams<StateT>
   ): IView<StateT> {
     let htmlTarget: HTMLElement = null;
     let dhxTarget: ICell = null;
@@ -147,29 +109,8 @@ export class View<StateT> implements IView<StateT>, IViewEventSource {
     /* do nothing */
   }
 
-  observe(
-    evaluator: StatePathEvaluator<StateT>,
-    handler: (value: unknown) => void
-  ) {
-    if (!this._stateHandlers.has(evaluator)) {
-      this._stateHandlers.set(evaluator, []);
-    }
-    this._stateHandlers.get(evaluator).push(handler);
-    if (!this.params.store || !this.params.store.observe) {
-      throw new Error(`Store for view ${this.constructor.name} is not set`);
-    }
-    this.params.store.observe(evaluator, handler);
-  }
-
   destroy() {
-    this._events.forEach(a => {
-      a.obj.detach(a.id);
-    });
-
+    super.destroy();
     this._views.forEach(view => view.destroy());
-
-    [...this._stateHandlers.entries()].forEach(([prop, handlers]) =>
-      handlers.forEach(h => this.params.store.unobserve(prop, h))
-    );
   }
 }
