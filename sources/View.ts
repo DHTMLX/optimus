@@ -86,13 +86,15 @@ export class View<StateT> extends Component<StateT>
       if (now) {
         (now as any).htmlRoot = htmlTarget;
       }
-      if (typeof subroot === "string") {
-        htmlTarget.innerHTML = subroot;
-      } else {
-        htmlTarget.innerHTML = "";
-        // windows do not have one
-        if (subroot.mount) {
-          subroot.mount(htmlTarget);
+      if (subroot) {
+        if (typeof subroot === "string") {
+          htmlTarget.innerHTML = subroot;
+        } else {
+          htmlTarget.innerHTML = "";
+          // windows do not have one
+          if (subroot.mount) {
+            subroot.mount(htmlTarget);
+          }
         }
       }
     }
