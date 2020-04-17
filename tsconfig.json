@@ -5,7 +5,7 @@
     "lib": ["es2018", "dom"],
     "sourceMap": true,
     "declaration": true,
-    "declarationDir": "dist/types",
+    "declarationDir": "dist/types/lib",
     "downlevelIteration": true
   },
   "include": ["sources/**/*.ts"]

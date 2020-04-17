@@ -67,7 +67,10 @@ export class View<StateT> extends Component<StateT>
     if (typeof view !== "string") {
       now = new view(this.app, params);
       this._views.set(target, now);
-      subroot = now.init();
+      const newCell = now.init();
+      if (newCell) {
+        subroot = newCell;
+      }
     } else {
       subroot = view;
     }
@@ -83,13 +86,15 @@ export class View<StateT> extends Component<StateT>
       if (now) {
         (now as any).htmlRoot = htmlTarget;
       }
-      if (typeof subroot === "string") {
-        htmlTarget.innerHTML = subroot;
-      } else {
-        htmlTarget.innerHTML = "";
-        // windows do not have one
-        if (subroot.mount) {
-          subroot.mount(htmlTarget);
+      if (subroot) {
+        if (typeof subroot === "string") {
+          htmlTarget.innerHTML = subroot;
+        } else {
+          htmlTarget.innerHTML = "";
+          // windows do not have one
+          if (subroot.mount) {
+            subroot.mount(htmlTarget);
+          }
         }
       }
     }
@@ -101,9 +106,7 @@ export class View<StateT> extends Component<StateT>
     return now;
   }
 
-  init(): ICell {
-    return null;
-  }
+  init(): ICell | string | void {}
 
   ready(): void {
     /* do nothing */
