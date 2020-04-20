@@ -1,6 +1,7 @@
 import {
   IApp,
   IComponent,
+  IComponentEventSource,
   IComponentFactory,
   IEventHandler,
   IEventSource,
@@ -9,7 +10,8 @@ import {
   StatePathEvaluator
 } from "./types";
 
-export class Component<StateT> implements IComponent<StateT> {
+export class Component<StateT>
+  implements IComponent<StateT>, IComponentEventSource {
   protected app: IApp<StateT>;
   protected _events: IEventHandler[];
   protected _components: IComponent<StateT>[];
@@ -42,7 +44,7 @@ export class Component<StateT> implements IComponent<StateT> {
   }
   observe(
     evaluator: StatePathEvaluator<StateT>,
-    handler: (value: unknown) => void
+    handler: (value: unknown, state?: StateT) => void
   ) {
     if (!this._stateHandlers.has(evaluator)) {
       this._stateHandlers.set(evaluator, []);
@@ -54,9 +56,9 @@ export class Component<StateT> implements IComponent<StateT> {
     this.params.store.observe(evaluator, handler);
   }
   on(
-    obj: IEventSource | IEventSourceHolder,
-    name: string,
-    handler: CallableFunction
+    obj: IEventSource | IEventSourceHolder | string,
+    name: string | CallableFunction,
+    handler?: CallableFunction
   ): any {
     if (arguments.length === 2) {
       handler = (name as any) as CallableFunction;
@@ -69,9 +71,12 @@ export class Component<StateT> implements IComponent<StateT> {
       ? holder.events
       : (obj as IEventSource);
 
-    const state = { id: events.on(name, handler), obj: events };
-    this._events.push(state);
-    return state;
+    if (typeof name === "string") {
+      const state = { id: events.on(name, handler), obj: events };
+
+      this._events.push(state);
+      return state;
+    }
   }
 
   fire(name, data) {

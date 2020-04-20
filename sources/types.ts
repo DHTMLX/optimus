@@ -36,7 +36,7 @@ export interface IComponent<StateT> extends IComponentEventSource {
   use(component: IComponentFactory<StateT>, params?: IParams<StateT>);
   observe(
     evaluator: StatePathEvaluator<StateT>,
-    handler: (value: unknown) => void
+    handler: (value: unknown, state?: StateT) => void
   );
   destroy();
 }
@@ -44,11 +44,11 @@ export interface IComponent<StateT> extends IComponentEventSource {
 export interface IStore<StateT> {
   observe(
     evaluator: StatePathEvaluator<StateT>,
-    handler: (value: unknown) => void
+    handler: (value: unknown, state?: StateT) => void
   ): void;
   unobserve(
     evaluator: StatePathEvaluator<StateT>,
-    handler: (value: unknown) => void
+    handler: (value: unknown, state?: StateT) => void
   ): void;
 }
 
