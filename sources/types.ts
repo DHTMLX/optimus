@@ -21,7 +21,7 @@ export interface ICell extends IEventSource {
 export type ITargetLocator = (root: ICell) => ICell;
 
 export interface IView<StateT> extends IComponentEventSource {
-  init(): ICell | string;
+  init(): ICell | string | void;
   ready(): void;
   show(
     target: string | ICell,
@@ -32,7 +32,7 @@ export interface IView<StateT> extends IComponentEventSource {
 }
 
 export interface IComponent<StateT> extends IComponentEventSource {
-  init();
+  init(): void;
   use(component: IComponentFactory<StateT>, params?: IParams<StateT>);
   observe(
     evaluator: StatePathEvaluator<StateT>,
