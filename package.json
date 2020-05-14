@@ -1,6 +1,6 @@
 {
   "name": "dhx-optimus",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Optimus micro-framework",
   "main": "dist/es5/optimus.js",
   "module": "dist/es6/optimus.js",
