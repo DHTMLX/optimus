@@ -72,7 +72,8 @@ export class Component<StateT>
       : (obj as IEventSource);
 
     if (typeof name === "string") {
-      const state = { id: events.on(name, handler), obj: events };
+      events.on(name, handler);
+      const state = { id: name, obj: events };
 
       this._events.push(state);
       return state;
