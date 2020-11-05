@@ -1,44 +1,39 @@
 export interface IDHXLibrary {
-  Layout: IDHXLayout;
   EventSystem: IEventSystem;
 }
 
 type IEventSystem = new () => IEventSource;
-type IDHXLayout = new (target: HTMLElement, cfg: any) => ICell;
 
 export interface IParams<StateT> {
   [id: string]: any;
   store?: IStore<StateT>;
 }
 
-export interface ICell extends IEventSource {
+export interface ICell {
   attach(obj: any): any;
   attachHTML(obj: string): void;
-  mount(obj: HTMLElement): void;
-  cell(name: string): ICell;
+  mount?(obj: HTMLElement): void;
 }
 
-export type ITargetLocator = (root: ICell) => ICell;
-
-export interface IView<StateT> extends IComponentEventSource {
-  init(): ICell | string | void;
+export interface IView<StateT> extends IComponent<StateT> {
+  init(): IDHXView | string | void;
   ready(): void;
   show(
     target: string | ICell,
     view: IViewFactory<StateT>,
     params?: IParams<StateT>
-  );
-  destroy();
+  ): void;
 }
 
 export interface IComponent<StateT> extends IComponentEventSource {
   init(): void;
-  use(component: IComponentFactory<StateT>, params?: IParams<StateT>);
+  use(component: IComponentFactory<StateT>, params?: IParams<StateT>): void;
   observe(
     evaluator: StatePathEvaluator<StateT>,
     handler: (value: unknown, state?: StateT) => void
-  );
-  destroy();
+  ): void;
+  destroy(): void;
+  _destroy(): void;
 }
 
 export interface IStore<StateT> {
@@ -70,7 +65,7 @@ export interface IEventHandler {
 export interface IEventSource {
   on(name: string, handler: CallableFunction): string;
   detach(id: string): void;
-  fire(name: string, args: any[]);
+  fire(name: string, args: any[]): void;
 }
 
 export interface IEventSourceHolder {
@@ -79,12 +74,18 @@ export interface IEventSourceHolder {
 
 export interface IComponentEventSource {
   on(obj: IEventSource, name: string, handler: CallableFunction): any;
-  fire(name: string, args: any[]);
+  fire(name: string, args: any[]): void;
 }
 
 export interface IApp<StateT> extends IView<StateT> {
   store: IStore<StateT>;
   events: IEventSource;
+  init(): void;
 }
 
 export type StatePathEvaluator<T> = (state: T) => unknown;
+
+export interface IDHXView {
+  destructor(): void;
+  mount?(container: HTMLElement, vnode?: any): void;
+}

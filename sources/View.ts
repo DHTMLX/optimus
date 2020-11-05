@@ -3,6 +3,7 @@ import {
   IApp,
   ICell,
   IComponentEventSource,
+  IDHXView,
   IParams,
   IView,
   IViewFactory
@@ -13,11 +14,8 @@ export const TopView: string = "TopView";
 
 export class View<StateT> extends Component<StateT>
   implements IView<StateT>, IComponentEventSource {
-  protected cell: ICell;
-
-  protected dhxRoot: ICell;
-  protected htmlRoot: HTMLElement;
-  private _views: Map<ICell | HTMLElement, IView<StateT>>;
+  private _views: Map<ICell | HTMLElement | number, IView<StateT>>;
+  private _rootView: IDHXView;
 
   constructor(app: IApp<StateT>, params?: IParams<StateT>) {
     super(app, params);
@@ -25,95 +23,109 @@ export class View<StateT> extends Component<StateT>
   }
 
   show(
-    cell: string | ICell,
+    cell: string | HTMLElement | ICell,
     view: IViewFactory<StateT> | string,
     params?: IParams<StateT>
   ): IView<StateT> {
-    let htmlTarget: HTMLElement = null;
-    let dhxTarget: ICell = null;
+    let viewKey: HTMLElement | number | ICell;
+    let htmlRoot: HTMLElement = null;
+    let dhxRoot: ICell = null;
 
+    // correct show target if necessary
     if (cell) {
       if (typeof cell === "string") {
         if (cell === TopView) {
-          htmlTarget = window as any;
+          // generate unique value
+          // as we can have multiple TopViews at the same time
+          viewKey = new Date().valueOf();
         } else {
-          htmlTarget = (this.htmlRoot || document).querySelector(cell);
+          htmlRoot = document.querySelector(cell);
         }
+      } else if ((cell as HTMLElement).tagName) {
+        htmlRoot = cell as HTMLElement;
       } else {
-        dhxTarget = typeof cell === "string" ? null : cell;
-      }
-    } else {
-      if (this.htmlRoot) {
-        htmlTarget = this.htmlRoot;
-      }
-      if (this.dhxRoot) {
-        dhxTarget = this.dhxRoot;
+        dhxRoot = cell as ICell;
       }
     }
 
-    const target = htmlTarget || dhxTarget;
+    viewKey = viewKey || htmlRoot || dhxRoot;
+
     params = params || {};
     if (!params.store && this.params.store) {
       params.store = this.params.store;
     }
-    const old = this._views.get(target);
-    if (old && cell !== TopView) {
-      old.destroy();
-      this._views.delete(target);
+
+    // get and destroy old subview
+    const old = this._views.get(viewKey);
+    if (old) {
+      old._destroy();
+      this._views.delete(viewKey);
     }
 
-    let now: IView<StateT> = null;
-    let subroot: string | ICell = null;
-    if (typeof view !== "string") {
-      now = new view(this.app, params);
-      this._views.set(target, now);
-      const newCell = now.init();
-      if (newCell) {
-        subroot = newCell;
-      }
-    } else {
-      subroot = view;
+    // special handling for string content
+    if (typeof view === "string") {
+      this._attach(htmlRoot, dhxRoot, view);
+      return null;
     }
 
-    if (dhxTarget) {
-      (now as any).dhxRoot = subroot;
-      if (typeof subroot === "string") {
-        dhxTarget.attachHTML(subroot);
-      } else {
-        dhxTarget.attach(subroot);
-      }
-    } else {
-      if (now) {
-        (now as any).htmlRoot = htmlTarget;
-      }
-      if (subroot) {
-        if (typeof subroot === "string") {
-          htmlTarget.innerHTML = subroot;
-        } else {
-          htmlTarget.innerHTML = "";
-          // windows do not have one
-          if (subroot.mount) {
-            subroot.mount(htmlTarget);
-          }
-        }
-      }
-    }
+    // create new view
+    let now = new view(this.app, params);
 
-    if (now) {
-      now.ready();
-    }
+    // attach to parent
+    this._attach(htmlRoot, dhxRoot, now.init() || null);
 
+    // store view in hash of kids
+    this._views.set(viewKey, now);
+
+    now.ready();
     return now;
   }
 
-  init(): ICell | string | void {}
+  init(): IDHXView | string | void {}
 
   ready(): void {
     /* do nothing */
   }
 
-  destroy() {
-    super.destroy();
-    this._views.forEach(view => view.destroy());
+  destroy(): void {
+    /* do nothing */
+  }
+
+  _destroy() {
+    super._destroy();
+
+    // destroy sub-views
+    this._views.forEach(view => view._destroy());
+
+    // destroy main widget, if any
+    if (this._rootView) {
+      this._rootView.destructor();
+    }
+
+    this._views = this._rootView = null;
+  }
+
+  private _attach(
+    htmlRoot: HTMLElement,
+    dhxRoot: ICell,
+    content: string | IDHXView
+  ): void {
+    if (typeof content === "string") {
+      // the HTML string content
+      if (htmlRoot) {
+        htmlRoot.innerHTML = content;
+      } else if (dhxRoot) {
+        dhxRoot.attachHTML(content);
+      }
+    } else if (content) {
+      // dhx widget was provided
+      if (htmlRoot) {
+        content.mount(htmlRoot);
+      } else if (dhxRoot) {
+        dhxRoot.attach(content);
+      }
+
+      this._rootView = content;
+    }
   }
 }

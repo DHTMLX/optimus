@@ -1,8 +1,10 @@
 import {
   IApp,
+  ICell,
   IComponent,
   IComponentEventSource,
   IComponentFactory,
+  IDHXView,
   IEventHandler,
   IEventSource,
   IEventSourceHolder,
@@ -13,6 +15,8 @@ import {
 export class Component<StateT>
   implements IComponent<StateT>, IComponentEventSource {
   protected app: IApp<StateT>;
+  protected params: IParams<StateT>;
+
   protected _events: IEventHandler[];
   protected _components: IComponent<StateT>[];
 
@@ -20,8 +24,6 @@ export class Component<StateT>
     StatePathEvaluator<StateT>,
     ((value: unknown) => void)[]
   >;
-
-  protected params: IParams<StateT>;
 
   constructor(app: IApp<StateT>, params?: IParams<StateT>) {
     this.app = app;
@@ -80,19 +82,32 @@ export class Component<StateT>
     }
   }
 
-  fire(name, data) {
+  fire(name: string, data: any[]): void {
     return this.app.events.fire(name, data);
   }
+
   destroy() {
+    /* do nothing */
+  }
+
+  _destroy() {
+    // user defined destructor
+    this.destroy();
+
     this._events.forEach(a => {
       a.obj.detach(a.id);
     });
 
-    this._components.forEach(c => c.destroy());
+    this._components.forEach(c => {
+      c._destroy();
+    });
+
     if (this.params) {
       [...this._stateHandlers.entries()].forEach(([prop, handlers]) =>
         handlers.forEach(h => this.params.store.unobserve(prop, h))
       );
     }
+
+    this._events = this._components = this.params = null;
   }
 }
