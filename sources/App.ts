@@ -26,13 +26,13 @@ export class App<StateT> extends View<StateT> implements IApp<StateT> {
   }
   render(target: string | HTMLElement | ICell) {
     this._root = target || document.body;
-    this.init();
+    this._init();
   }
   show(
-    _cell: string | ICell,
+    cell: string | ICell,
     view: IViewFactory<StateT> | string,
     params?: IParams<StateT>
   ): IView<StateT> {
-    return super.show(this._root, view, params);
+    return super.show(cell || this._root, view, params);
   }
 }

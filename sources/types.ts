@@ -1,4 +1,5 @@
 export interface IDHXLibrary {
+  awaitRedraw(): Promise<void>;
   EventSystem: IEventSystem;
 }
 
@@ -12,12 +13,15 @@ export interface IParams<StateT> {
 export interface ICell {
   attach(obj: any): any;
   attachHTML(obj: string): void;
+  getCellView?(): { el: HTMLElement };
+  getContainer?(): HTMLElement;
   mount?(obj: HTMLElement): void;
 }
 
 export interface IView<StateT> extends IComponent<StateT> {
   init(): IDHXView | string | void;
-  ready(): void;
+  _init(): IDHXView | string | void;
+  ready(root: HTMLElement): void;
   show(
     target: string | ICell,
     view: IViewFactory<StateT>,
@@ -87,5 +91,6 @@ export type StatePathEvaluator<T> = (state: T) => unknown;
 
 export interface IDHXView {
   destructor(): void;
+  getContainer?(): HTMLElement;
   mount?(container: HTMLElement, vnode?: any): void;
 }

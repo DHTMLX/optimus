@@ -3,11 +3,14 @@ import {
   IApp,
   ICell,
   IComponentEventSource,
+  IDHXLibrary,
   IDHXView,
   IParams,
   IView,
   IViewFactory
 } from "./types";
+
+declare var dhx: IDHXLibrary;
 
 // tslint:disable-next-line:variable-name
 export const TopView: string = "TopView";
@@ -72,16 +75,39 @@ export class View<StateT> extends Component<StateT>
     let now = new view(this.app, params);
 
     // attach to parent
-    this._attach(htmlRoot, dhxRoot, now.init() || null);
+    const sub = now._init();
+    this._attach(htmlRoot, dhxRoot, sub || null);
 
     // store view in hash of kids
     this._views.set(viewKey, now);
 
-    now.ready();
+    dhx.awaitRedraw().then(() => {
+      if (htmlRoot) {
+        now.ready(htmlRoot);
+      } else if (dhxRoot) {
+        const el = dhxRoot.getContainer
+          ? dhxRoot.getContainer()
+          : dhxRoot.getCellView().el;
+        now.ready(el);
+      } else if (sub && (sub as IDHXView).getContainer) {
+        // window
+        now.ready((sub as IDHXView).getContainer());
+      }
+    });
+
     return now;
   }
 
   init(): IDHXView | string | void {}
+
+  _init(): IDHXView | string | void {
+    const sub = this.init();
+    if (sub && typeof sub !== "string") {
+      this._rootView = sub;
+    }
+
+    return sub;
+  }
 
   ready(): void {
     /* do nothing */
@@ -98,7 +124,7 @@ export class View<StateT> extends Component<StateT>
     this._views.forEach(view => view._destroy());
 
     // destroy main widget, if any
-    if (this._rootView) {
+    if (this._rootView && this._rootView.destructor) {
       this._rootView.destructor();
     }
 
@@ -124,8 +150,6 @@ export class View<StateT> extends Component<StateT>
       } else if (dhxRoot) {
         dhxRoot.attach(content);
       }
-
-      this._rootView = content;
     }
   }
 }
