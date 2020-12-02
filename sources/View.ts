@@ -109,7 +109,7 @@ export class View<StateT> extends Component<StateT>
     return sub;
   }
 
-  ready(): void {
+  ready(root: HTMLElement): void {
     /* do nothing */
   }
 
