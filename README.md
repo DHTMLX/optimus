@@ -1,6 +1,8 @@
 DHTMLX Optimus
 ==============
 
+[![npm version](https://badge.fury.io/js/dhx-optimus.svg)](https://badge.fury.io/js/dhx-optimus)
+
 Micro-framework for [DHTMLX UI](https://dhtmlx.com)
 
 	
