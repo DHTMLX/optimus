@@ -29,7 +29,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ## Useful links
 
-- [Optimus starter app}](https://github.com/DHTMLX/optimus-starter-app)
+- [Optimus starter app](https://github.com/DHTMLX/optimus-starter-app)
 
 - [DHTMLX Optimus documentation](https://docs.dhtmlx.com/suite/optimus_guides__index.html)
 
